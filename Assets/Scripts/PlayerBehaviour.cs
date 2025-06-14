@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class PlayerBehaviour : MonoBehaviour
 {
-    public int maxHealth = 100; // Maximum health of the player
-    public int currentHealth = 100; // Current health of the player
+    int maxHealth = 100; // Maximum health of the player
+    int currentHealth = 100; // Current health of the player
     bool canInteract = false; // Flag to check if the player can interact with objects
     bool isInSewage = false;
     float sewageTimer = 0f;
