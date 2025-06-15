@@ -7,12 +7,16 @@ public class PlayerBehaviour : MonoBehaviour
     bool canInteract = false; // Flag to check if the player can interact with objects
     bool isInSewage = false;
     float sewageTimer = 0f;
-    
+
+    public bool HasAxe = false; // Property to check if the player has an axe
+
     [SerializeField] // Serialize field to allow adjustment in the Unity Inspector
     public int sewageDamagePerSecond = 5;
 
 
     DoorBehaviour currentDoor = null;
+    AxeBehaviour axe = null;
+
 
     public void ModifyHealth(int amount)
     {
@@ -23,7 +27,7 @@ public class PlayerBehaviour : MonoBehaviour
         if (currentHealth <= 0)
         {
             Debug.Log("Player has died!"); // Log player death
-            // Here you can add logic for player death, like respawning or ending the game
+                                           // Here you can add logic for player death, like respawning or ending the game
         }
     }
 
@@ -40,6 +44,19 @@ public class PlayerBehaviour : MonoBehaviour
             isInSewage = true; // Player is in sewage hazard
             Debug.Log("Player entered sewage hazard");
         }
+        else if (other.CompareTag("Axe"))
+        {
+            axe = other.GetComponentInParent<AxeBehaviour>();
+            if (!HasAxe)
+            {
+                Debug.Log("Collecting axe...");
+                axe.CollectAxe(this);
+            }
+            else
+            {
+                Debug.Log("AxeBehaviour not found or already has axe.");
+            }
+        }
     }
 
     void OnInteract()
@@ -52,25 +69,26 @@ public class PlayerBehaviour : MonoBehaviour
                 currentDoor.OpenDoor(); // Call the OpenDoor method on the door
             }
         }
+        else return;
     }
 
     void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Door"))   // Check if the player exited a door trigger
         {
-            if (other.CompareTag("Door"))   // Check if the player exited a door trigger
-            {
-                Debug.Log("Player exited door trigger");
-                canInteract = false; // Disable interaction with the door
-                // Reset currentDoor to null when exiting the door trigger
-                currentDoor = null;
-            }
-            else if (other.CompareTag("SewageHazard"))  // Check if the player exited a sewage hazard trigger
-            {
-                Debug.Log("Player exited sewage hazard");
-                isInSewage = false; // Player is no longer in sewage hazard
-                // Reset sewage timer when exiting sewage hazard
-                sewageTimer = 0f;
-            }
+            Debug.Log("Player exited door trigger");
+            canInteract = false; // Disable interaction with the door
+                                 // Reset currentDoor to null when exiting the door trigger
+            currentDoor = null;
         }
+        else if (other.CompareTag("SewageHazard"))  // Check if the player exited a sewage hazard trigger
+        {
+            Debug.Log("Player exited sewage hazard");
+            isInSewage = false; // Player is no longer in sewage hazard
+                                // Reset sewage timer when exiting sewage hazard
+            sewageTimer = 0f;
+        }
+    }
 
     // Update is called once per frame
     void Update()
@@ -87,5 +105,5 @@ public class PlayerBehaviour : MonoBehaviour
                 Debug.Log("Sewage damaged player. Current health: " + currentHealth);
             }
         }
-   }
+    }
 }

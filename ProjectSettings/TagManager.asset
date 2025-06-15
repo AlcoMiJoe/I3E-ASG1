@@ -7,8 +7,9 @@ TagManager:
   - CinemachineTarget
   - SewageHazard
   - Door
-  - Axe
   - AxeBreak
+  - Orb
+  - Axe
   layers:
   - Default
   - TransparentFX
