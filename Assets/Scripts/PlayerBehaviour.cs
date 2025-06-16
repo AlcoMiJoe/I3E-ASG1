@@ -19,6 +19,12 @@ public class PlayerBehaviour : MonoBehaviour
     float interactionDistance = 5f;
     [SerializeField]
     Transform interactionPoint; // Point from which the player interacts with objects
+    
+    [SerializeField]
+    AudioClip damageSound; // Sound to play when interacting with objects
+    [SerializeField]
+    AudioClip healingSound; // Sound to play when interacting with objects
+
 
     DoorBehaviour currentDoor = null;
     OrbBehaviour currentOrb = null; // Reference to the currently detected coin
@@ -26,6 +32,15 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void ModifyHealth(int amount)
     {
+        if (amount < 0)
+        {
+            AudioSource.PlayClipAtPoint(damageSound, transform.position);
+        }
+        else if (amount > 0)
+                {
+            AudioSource.PlayClipAtPoint(healingSound, transform.position);
+        }
+
         currentHealth += amount; // Modify the player's health by the specified amount
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Ensure health does not exceed max or go below zero
         Debug.Log("Player health modified. Current health: " + currentHealth);
@@ -156,14 +171,37 @@ public class PlayerBehaviour : MonoBehaviour
 
         RaycastHit hitInfo;
         Debug.DrawRay(interactionPoint.position, interactionPoint.forward * interactionDistance, Color.magenta);
+
+        canInteract = false;
+        currentOrb = null;
+        lookingAtBreakable = null;
+
         if (Physics.Raycast(interactionPoint.position, interactionPoint.forward, out hitInfo, interactionDistance))
         {
-            if (hitInfo.collider.gameObject.CompareTag("Collectible"))
+            GameObject hitObject = hitInfo.collider.gameObject;
+
+            if (hitObject.CompareTag("Collectible"))
             {
-                canInteract = true;
-                currentOrb = hitInfo.collider.gameObject.GetComponent<OrbBehaviour>();
-                currentOrb.HighlightOrb(); // Highlight the orb to indicate it can be collected
-                Debug.Log("Orb detected: " + currentOrb.gameObject.name);
+                currentOrb = hitObject.GetComponent<OrbBehaviour>();
+                if (currentOrb != null)
+                {
+                    currentOrb.HighlightOrb();
+                    Debug.Log("Orb detected: " + currentOrb.gameObject.name);
+                    canInteract = true;
+                }
+            }
+            else if (hitObject.CompareTag("AxeBreak"))
+            {
+                lookingAtBreakable = hitObject.GetComponent<BreakableBehaviour>();
+                if (lookingAtBreakable != null)
+                {
+                    canInteract = true;
+
+                    if (HasAxe)
+                        Debug.Log("E to break");
+                    else
+                        Debug.Log("Looks like I need something to break this.");
+                }
             }
         }
         else if (currentOrb != null)
