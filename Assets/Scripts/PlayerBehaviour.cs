@@ -86,6 +86,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     void OnInteract()
     {
+        Debug.Log("Player interaction initiated"); // Log interaction initiation
         if (canInteract)
         {
             if (currentDoor != null)
@@ -93,17 +94,17 @@ public class PlayerBehaviour : MonoBehaviour
                 Debug.Log("Interacting with door"); // Log interaction
                 currentDoor.OpenDoor(); // Call the OpenDoor method on the door
             }
+            else if (lookingAtBreakable != null && HasAxe)
+            {
+                lookingAtBreakable.Break();
+            }
+            else if (currentOrb != null)
+            {
+                Debug.Log("Collecting orb");
+                currentOrb.CollectOrb(this);
+            }            
         }
-        else if (lookingAtBreakable != null && HasAxe)
-        {
-            lookingAtBreakable.Break();
-        }
-        else if (currentOrb != null)
-        {
-            Debug.Log("Collecting orb");
-            currentOrb.CollectOrb(this);
-        }
-        else return;
+
     }
 
     void OnTriggerExit(Collider other)
@@ -153,32 +154,22 @@ public class PlayerBehaviour : MonoBehaviour
             }
         }
 
-        RaycastHit hit;
-        // Cast a ray from the interaction point to check for breakable objects
-        if (Physics.Raycast(interactionPoint.position, interactionPoint.forward, out hit, interactionDistance))
+        RaycastHit hitInfo;
+        Debug.DrawRay(interactionPoint.position, interactionPoint.forward * interactionDistance, Color.magenta);
+        if (Physics.Raycast(interactionPoint.position, interactionPoint.forward, out hitInfo, interactionDistance))
         {
-            if (hit.collider.CompareTag("Breakable"))
+            if (hitInfo.collider.gameObject.CompareTag("Collectible"))
             {
-                lookingAtBreakable = hit.collider.gameObject.GetComponent<BreakableBehaviour>();
-                if (lookingAtBreakable != null)
-                {
-                    if (HasAxe)
-                        Debug.Log("E to break");
-                    else
-                        Debug.Log("Looks like I need something to break this.");
-                }
-            }
-            else if (hit.collider.CompareTag("Collectible"))
-            {
-                canInteract = true; // Allow interaction with the collectible
-                currentOrb = hit.collider.gameObject.GetComponent<OrbBehaviour>();
-                currentOrb.HighlightOrb(); // Highlight the collectible to indicate it can be collected
-                Debug.Log("E to collect orb");
+                canInteract = true;
+                currentOrb = hitInfo.collider.gameObject.GetComponent<OrbBehaviour>();
+                currentOrb.HighlightOrb(); // Highlight the orb to indicate it can be collected
+                Debug.Log("Orb detected: " + currentOrb.gameObject.name);
             }
         }
         else if (currentOrb != null)
         {
             currentOrb.UnhighlightOrb(); // Unhighlight the orb if no longer detected
+            canInteract = false;
             currentOrb = null;
         }
     }

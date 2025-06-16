@@ -34086,6 +34086,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 875ebc3cee354bf46912b19f70aee9b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  collectSound: {fileID: 8300000, guid: ce486c5832977e044b10c7a026b44982, type: 3}
   HighlightMaterial: {fileID: 2100000, guid: 5b3c2b51cbc82ea4291918b53fe76e42, type: 2}
   DefaultMaterial: {fileID: 2100000, guid: 7a7ba275fd838ff488ad9f0ece135e3a, type: 2}
   OrbValue: 10
@@ -34108,7 +34109,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.5
+  m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &4976590219043320983
 Rigidbody:

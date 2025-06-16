@@ -5,6 +5,10 @@ public class OrbBehaviour : MonoBehaviour
     MeshRenderer meshRenderer;
 
     [SerializeField]
+    AudioClip collectSound; // Sound to play when the orb is collected
+
+
+    [SerializeField]
     Material HighlightMaterial;
     [SerializeField]
     Material DefaultMaterial;
@@ -14,6 +18,7 @@ public class OrbBehaviour : MonoBehaviour
     public void CollectOrb(PlayerBehaviour player)
     {
         Debug.Log("Orb collected with value: " + OrbValue);
+        AudioSource.PlayClipAtPoint(collectSound, transform.position); // Play the collection sound
         player.ModifyScore(OrbValue); // Modify the player's score by the orb's value
         Destroy(gameObject); // Destroy the orb after collection
     }
