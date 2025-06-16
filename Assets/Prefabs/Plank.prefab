@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 3232147290908308004}
   - component: {fileID: 4108597573311731382}
   - component: {fileID: 8773203923805726450}
+  - component: {fileID: 1523774173902038406}
   m_Layer: 0
   m_Name: Plank
-  m_TagString: Untagged
+  m_TagString: AxeBreak
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -352,3 +353,15 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
+--- !u!114 &1523774173902038406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1505564738986378058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57926cbcc092b494fb32ad8539a46692, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

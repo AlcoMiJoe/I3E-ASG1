@@ -6,17 +6,23 @@ public class PlayerBehaviour : MonoBehaviour
     int currentHealth = 100; // Current health of the player
     bool canInteract = false; // Flag to check if the player can interact with objects
     bool isInSewage = false;
+    int currentScore = 0;
     float sewageTimer = 0f;
+    BreakableBehaviour lookingAtBreakable = null;
 
     public bool HasAxe = false; // Property to check if the player has an axe
 
     [SerializeField] // Serialize field to allow adjustment in the Unity Inspector
     public int sewageDamagePerSecond = 5;
 
+    [SerializeField]
+    float interactionDistance = 5f;
+    [SerializeField]
+    Transform interactionPoint; // Point from which the player interacts with objects
 
     DoorBehaviour currentDoor = null;
+    OrbBehaviour currentOrb = null; // Reference to the currently detected coin
     AxeBehaviour axe = null;
-
 
     public void ModifyHealth(int amount)
     {
@@ -30,6 +36,17 @@ public class PlayerBehaviour : MonoBehaviour
                                            // Here you can add logic for player death, like respawning or ending the game
         }
     }
+
+    public void ModifyScore(int amount)
+    {
+        // This method can be used to modify the player's score
+        // Implement score logic here if needed
+        Debug.Log("Score modified by: " + amount);
+        currentScore += amount; // Modify the player's score by the specified amount
+        Debug.Log("Current score: " + currentScore); // Log the current score
+    }
+
+
 
     void OnTriggerEnter(Collider other)
     {
@@ -57,6 +74,14 @@ public class PlayerBehaviour : MonoBehaviour
                 Debug.Log("AxeBehaviour not found or already has axe.");
             }
         }
+        else if (other.CompareTag("Collectible"))
+        {
+            // Set the canInteract flag to true
+            // Get the CoinBehaviour component from the detected object
+            canInteract = true;
+            currentOrb = other.GetComponent<OrbBehaviour>(); 
+            currentOrb.HighlightOrb(); // Highlight the coin to indicate it can be collected
+        }
     }
 
     void OnInteract()
@@ -68,6 +93,15 @@ public class PlayerBehaviour : MonoBehaviour
                 Debug.Log("Interacting with door"); // Log interaction
                 currentDoor.OpenDoor(); // Call the OpenDoor method on the door
             }
+        }
+        else if (lookingAtBreakable != null && HasAxe)
+        {
+            lookingAtBreakable.Break();
+        }
+        else if (currentOrb != null)
+        {
+            Debug.Log("Collecting orb");
+            currentOrb.CollectOrb(this);
         }
         else return;
     }
@@ -88,6 +122,19 @@ public class PlayerBehaviour : MonoBehaviour
                                 // Reset sewage timer when exiting sewage hazard
             sewageTimer = 0f;
         }
+        else if (currentOrb != null)
+        {
+            // If the object that exited the trigger is the same as the current coin
+            if (other.gameObject == currentOrb.gameObject)
+            {
+                // Set the canInteract flag to false
+                // Set the current coin to null
+                // This prevents the player from interacting with the coin
+                canInteract = false;
+                currentOrb.UnhighlightOrb(); // Unhighlight the coin to indicate it can no longer be collected
+                currentOrb = null;
+            }
+        }
     }
 
     // Update is called once per frame
@@ -104,6 +151,35 @@ public class PlayerBehaviour : MonoBehaviour
                 sewageTimer = 0f;
                 Debug.Log("Sewage damaged player. Current health: " + currentHealth);
             }
+        }
+
+        RaycastHit hit;
+        // Cast a ray from the interaction point to check for breakable objects
+        if (Physics.Raycast(interactionPoint.position, interactionPoint.forward, out hit, interactionDistance))
+        {
+            if (hit.collider.CompareTag("Breakable"))
+            {
+                lookingAtBreakable = hit.collider.gameObject.GetComponent<BreakableBehaviour>();
+                if (lookingAtBreakable != null)
+                {
+                    if (HasAxe)
+                        Debug.Log("E to break");
+                    else
+                        Debug.Log("Looks like I need something to break this.");
+                }
+            }
+            else if (hit.collider.CompareTag("Collectible"))
+            {
+                canInteract = true; // Allow interaction with the collectible
+                currentOrb = hit.collider.gameObject.GetComponent<OrbBehaviour>();
+                currentOrb.HighlightOrb(); // Highlight the collectible to indicate it can be collected
+                Debug.Log("E to collect orb");
+            }
+        }
+        else if (currentOrb != null)
+        {
+            currentOrb.UnhighlightOrb(); // Unhighlight the orb if no longer detected
+            currentOrb = null;
         }
     }
 }

@@ -8,8 +8,8 @@ TagManager:
   - SewageHazard
   - Door
   - AxeBreak
-  - Orb
   - Axe
+  - Collectible
   layers:
   - Default
   - TransparentFX

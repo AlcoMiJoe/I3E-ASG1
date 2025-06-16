@@ -119,6 +119,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6909596072402094729}
   - component: {fileID: 7685166741009911877}
+  - component: {fileID: 7828887356394170933}
   m_Layer: 0
   m_Name: DoorHinge
   m_TagString: Door
@@ -163,3 +164,15 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 28}
   m_Center: {x: 0.5, y: 0.5, z: 0}
+--- !u!114 &7828887356394170933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5067765367546211630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36bd7a43391403f47b798af75f599148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
