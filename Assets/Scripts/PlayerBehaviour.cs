@@ -1,4 +1,6 @@
 using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
 
 public class PlayerBehaviour : MonoBehaviour
 {
@@ -9,6 +11,10 @@ public class PlayerBehaviour : MonoBehaviour
     int currentScore = 0;
     float sewageTimer = 0f;
     BreakableBehaviour lookingAtBreakable = null;
+
+    OrbBehaviour previousOrb = null;
+    BreakableBehaviour previousBreakable = null;
+
 
     public bool HasAxe = false; // Property to check if the player has an axe
 
@@ -24,6 +30,13 @@ public class PlayerBehaviour : MonoBehaviour
     AudioClip damageSound; // Sound to play when interacting with objects
     [SerializeField]
     AudioClip healingSound; // Sound to play when interacting with objects
+    [SerializeField]
+    TextMeshProUGUI scoreText; // UI Text to display player's health
+    [SerializeField]
+    TextMeshProUGUI interactionPrompt; 
+
+    [SerializeField]
+    Slider healthSlider; // UI Slider to display player's health
 
 
     DoorBehaviour currentDoor = null;
@@ -43,6 +56,7 @@ public class PlayerBehaviour : MonoBehaviour
 
         currentHealth += amount; // Modify the player's health by the specified amount
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Ensure health does not exceed max or go below zero
+        healthSlider.value = currentHealth; // Update the health slider to reflect the current health
         Debug.Log("Player health modified. Current health: " + currentHealth);
 
         if (currentHealth <= 0)
@@ -59,6 +73,7 @@ public class PlayerBehaviour : MonoBehaviour
         Debug.Log("Score modified by: " + amount);
         currentScore += amount; // Modify the player's score by the specified amount
         Debug.Log("Current score: " + currentScore); // Log the current score
+        scoreText.text = "Score: " + currentScore.ToString(); // Update the score text in the UI
     }
 
 
@@ -153,6 +168,21 @@ public class PlayerBehaviour : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        // Initialize player health and score
+        currentHealth = maxHealth; // Set current health to maximum health
+        currentScore = 0; // Initialize score to zero
+        Debug.Log("Player started with health: " + currentHealth + " and score: " + currentScore);
+
+        scoreText.text = "Score: " + currentScore.ToString(); // Update the score text in the UI
+
+        healthSlider.maxValue = maxHealth; // Set the maximum value of the health slider
+        healthSlider.value = currentHealth; // Set the initial value of the health slider to current health
+    }
+
+
+
     // Update is called once per frame
     void Update()
     {
@@ -172,9 +202,11 @@ public class PlayerBehaviour : MonoBehaviour
         RaycastHit hitInfo;
         Debug.DrawRay(interactionPoint.position, interactionPoint.forward * interactionDistance, Color.magenta);
 
+        // Reset current detection
         canInteract = false;
-        currentOrb = null;
-        lookingAtBreakable = null;
+
+        OrbBehaviour newOrb = null;
+        BreakableBehaviour newBreakable = null;
 
         if (Physics.Raycast(interactionPoint.position, interactionPoint.forward, out hitInfo, interactionDistance))
         {
@@ -182,33 +214,64 @@ public class PlayerBehaviour : MonoBehaviour
 
             if (hitObject.CompareTag("Collectible"))
             {
-                currentOrb = hitObject.GetComponent<OrbBehaviour>();
-                if (currentOrb != null)
+                newOrb = hitObject.GetComponent<OrbBehaviour>();
+                if (newOrb != null)
                 {
-                    currentOrb.HighlightOrb();
-                    Debug.Log("Orb detected: " + currentOrb.gameObject.name);
+                    if (previousOrb != null && previousOrb != newOrb)
+                        previousOrb.UnhighlightOrb();
+                        interactionPrompt.text = ""; // Clear interaction prompt text
+
+                    newOrb.HighlightOrb();
                     canInteract = true;
+                    interactionPrompt.text = "E to collect"; // Update interaction prompt text
+
                 }
             }
             else if (hitObject.CompareTag("AxeBreak"))
             {
-                lookingAtBreakable = hitObject.GetComponent<BreakableBehaviour>();
-                if (lookingAtBreakable != null)
+                newBreakable = hitObject.GetComponent<BreakableBehaviour>();
+                if (newBreakable != null)
                 {
-                    canInteract = true;
+                    if (previousBreakable != null && previousBreakable != newBreakable)
+                    {
+                        previousBreakable.Unhighlight();
+                        interactionPrompt.text = ""; // Clear interaction prompt text
+                    }
+
+                    newBreakable.Highlight();
+                    canInteract = HasAxe;
 
                     if (HasAxe)
-                        Debug.Log("E to break");
+                    {
+                        interactionPrompt.text = "E to break"; // Update interaction prompt text
+                    }
                     else
-                        Debug.Log("Looks like I need something to break this.");
+                    {
+                        interactionPrompt.text = "Player: Looks like I need something to break this"; // Update interaction prompt text
+                    }
+                    interactionPrompt.gameObject.SetActive(true); // Ensure the interaction prompt is visible
                 }
             }
         }
-        else if (currentOrb != null)
+
+        // If previously highlighted orb is no longer looked at
+        if (previousOrb != null && previousOrb != newOrb)
         {
-            currentOrb.UnhighlightOrb(); // Unhighlight the orb if no longer detected
-            canInteract = false;
-            currentOrb = null;
+            previousOrb.UnhighlightOrb();
+            interactionPrompt.text = ""; // Clear interaction prompt text
         }
+        if (previousBreakable != null && previousBreakable != newBreakable)
+        {
+            previousBreakable.Unhighlight();
+            interactionPrompt.text = ""; // Clear interaction prompt text
+        }
+
+        // Update references
+        currentOrb = newOrb;
+        previousOrb = newOrb;
+
+        lookingAtBreakable = newBreakable;
+        previousBreakable = newBreakable;
+
     }
 }

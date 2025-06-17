@@ -393,4 +393,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57926cbcc092b494fb32ad8539a46692, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  highlightMaterial: {fileID: 2100000, guid: 17423948dbe468342a30e72046751125, type: 2}
+  originalMaterial: {fileID: 2100000, guid: d5ff0fd9f47728440bf819da6db05b3a, type: 2}
   breakSound: {fileID: 8300000, guid: 53002ef166681c843a99613cef9c4dd5, type: 3}

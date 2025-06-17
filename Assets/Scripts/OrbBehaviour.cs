@@ -1,4 +1,8 @@
 using UnityEngine;
+using TMPro; // Importing TextMeshPro for UI text handling
+
+// OrbBehaviour is responsible for the behavior of collectible orbs in the game
+// It handles collecting the orb, playing sounds, and highlighting the orb when interacted with
 
 public class OrbBehaviour : MonoBehaviour
 {
@@ -14,6 +18,9 @@ public class OrbBehaviour : MonoBehaviour
     Material DefaultMaterial;
     [SerializeField]
     int OrbValue = 1;
+
+    [SerializeField]
+    TextMeshProUGUI interactionPrompt; // Text to display when the orb is collected
 
     public void CollectOrb(PlayerBehaviour player)
     {

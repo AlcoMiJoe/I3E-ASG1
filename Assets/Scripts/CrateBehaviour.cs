@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class CrateOrbSpawnBehaviour : MonoBehaviour
+public class CrateBehaviour : MonoBehaviour
 {
     [SerializeField]
     public GameObject orbPrefab;
