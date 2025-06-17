@@ -680,7 +680,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1.5, y: 1.5, z: 1.5}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!114 &3586696469038931289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -711,4 +711,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   orbPrefab: {fileID: 4745412655194514612, guid: 408871643b4ddbc4e9dd1de8a461f9ac, type: 3}
   orbCount: 3
-  spawnAreaPadding: {x: 1, y: 1, z: 1}
+  spawnAreaPadding: {x: 1, y: 0, z: 1}

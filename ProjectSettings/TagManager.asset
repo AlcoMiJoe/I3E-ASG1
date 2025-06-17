@@ -10,6 +10,7 @@ TagManager:
   - AxeBreak
   - Axe
   - Collectible
+  - Lever
   layers:
   - Default
   - TransparentFX

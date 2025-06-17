@@ -42,7 +42,7 @@ public class CrateBehaviour : MonoBehaviour
         {
             Vector3 randomPos = new Vector3(
                 Random.Range(min.x, max.x),
-                Random.Range(min.y, max.y),
+                Random.Range(min.y, max.y) + 0.5f, // Slightly above the crate
                 Random.Range(min.z, max.z)
             );
 

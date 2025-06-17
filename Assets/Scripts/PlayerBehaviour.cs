@@ -1,6 +1,11 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement; // Importing SceneManagement for scene handling
+
+// PlayerBehaviour is responsible for the player's actions, health, score, and interactions with the game world
+// It handles player health, score, interactions with doors, collectibles, and breakable objects
+// It also manages player death and respawn functionality
 
 public class PlayerBehaviour : MonoBehaviour
 {
@@ -8,7 +13,7 @@ public class PlayerBehaviour : MonoBehaviour
     int currentHealth = 100; // Current health of the player
     bool canInteract = false; // Flag to check if the player can interact with objects
     bool isInSewage = false;
-    int currentScore = 0;
+    public int currentScore = 0;
     float sewageTimer = 0f;
     BreakableBehaviour lookingAtBreakable = null;
 
@@ -17,6 +22,7 @@ public class PlayerBehaviour : MonoBehaviour
 
 
     public bool HasAxe = false; // Property to check if the player has an axe
+    bool isDead = false; // Property to check if the player is dead
 
     [SerializeField] // Serialize field to allow adjustment in the Unity Inspector
     public int sewageDamagePerSecond = 5;
@@ -37,9 +43,14 @@ public class PlayerBehaviour : MonoBehaviour
 
     [SerializeField]
     Slider healthSlider; // UI Slider to display player's health
+    [SerializeField]
+    GameObject gameOverPanel; // Panel to display when the player dies
+    [SerializeField]
+    Button respawnButton; // Button to respawn the player after death
 
 
     DoorBehaviour currentDoor = null;
+    LeverBehaviour currentLever = null; // Reference to the currently detected lever
     OrbBehaviour currentOrb = null; // Reference to the currently detected coin
     AxeBehaviour axe = null;
 
@@ -50,7 +61,7 @@ public class PlayerBehaviour : MonoBehaviour
             AudioSource.PlayClipAtPoint(damageSound, transform.position);
         }
         else if (amount > 0)
-                {
+        {
             AudioSource.PlayClipAtPoint(healingSound, transform.position);
         }
 
@@ -59,10 +70,14 @@ public class PlayerBehaviour : MonoBehaviour
         healthSlider.value = currentHealth; // Update the health slider to reflect the current health
         Debug.Log("Player health modified. Current health: " + currentHealth);
 
-        if (currentHealth <= 0)
+        if (currentHealth <= 0 && !isDead)
         {
+            isDead = true; // Set the player as dead
+            Time.timeScale = 0f; // Pause the game
+            gameOverPanel.SetActive(true); // Show the game over panel
+            interactionPrompt.gameObject.SetActive(false); // Hide the interaction prompt
+            Cursor.lockState = CursorLockMode.None;
             Debug.Log("Player has died!"); // Log player death
-                                           // Here you can add logic for player death, like respawning or ending the game
         }
     }
 
@@ -85,6 +100,13 @@ public class PlayerBehaviour : MonoBehaviour
         {
             canInteract = true; // Allow interaction with the door
             currentDoor = other.GetComponent<DoorBehaviour>(); // Get the DoorBehaviour component from the door
+        }
+        else if (other.CompareTag("Lever"))
+        {
+            canInteract = true; // Allow interaction with the lever
+            currentLever = other.GetComponent<LeverBehaviour>(); // Get the LeverBehaviour component from the lever
+            interactionPrompt.text = "E to interact with lever"; // Update interaction prompt text
+            interactionPrompt.gameObject.SetActive(true);
         }
         else if (other.CompareTag("SewageHazard"))
         {
@@ -109,7 +131,7 @@ public class PlayerBehaviour : MonoBehaviour
             // Set the canInteract flag to true
             // Get the CoinBehaviour component from the detected object
             canInteract = true;
-            currentOrb = other.GetComponent<OrbBehaviour>(); 
+            currentOrb = other.GetComponent<OrbBehaviour>();
             currentOrb.HighlightOrb(); // Highlight the coin to indicate it can be collected
         }
     }
@@ -123,6 +145,11 @@ public class PlayerBehaviour : MonoBehaviour
             {
                 Debug.Log("Interacting with door"); // Log interaction
                 currentDoor.OpenDoor(); // Call the OpenDoor method on the door
+            }
+            else if (currentLever != null)
+            {
+                Debug.Log("Interacting with lever"); // Log interaction
+                currentLever.FlipLever(); // Call the FlipLever method on the lever
             }
             else if (lookingAtBreakable != null && HasAxe)
             {
@@ -143,8 +170,17 @@ public class PlayerBehaviour : MonoBehaviour
         {
             Debug.Log("Player exited door trigger");
             canInteract = false; // Disable interaction with the door
-                                 // Reset currentDoor to null when exiting the door trigger
-            currentDoor = null;
+            currentDoor = null; // Reset currentDoor to null when exiting the door trigger
+            interactionPrompt.text = ""; // Clear interaction prompt text
+            interactionPrompt.gameObject.SetActive(false); // Hide the interaction prompt when exiting the door trigger
+        }
+        else if (other.CompareTag("Lever")) // Check if the player exited a lever trigger
+        {
+            Debug.Log("Player exited lever trigger");
+            canInteract = false; // Disable interaction with the lever
+            currentLever = null; // Reset currentLever to null when exiting the lever trigger
+            interactionPrompt.text = ""; // Clear interaction prompt text
+            interactionPrompt.gameObject.SetActive(false); // Hide the interaction prompt when exiting the lever trigger
         }
         else if (other.CompareTag("SewageHazard"))  // Check if the player exited a sewage hazard trigger
         {
@@ -168,6 +204,13 @@ public class PlayerBehaviour : MonoBehaviour
         }
     }
 
+    public void RestartGame()
+    {
+        Debug.Log("Restarting game..."); // Log the game restart action
+        Time.timeScale = 1f; // Resume the game time
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Reload the current scene to restart the game
+    }
+
     void Start()
     {
         // Initialize player health and score
@@ -179,6 +222,12 @@ public class PlayerBehaviour : MonoBehaviour
 
         healthSlider.maxValue = maxHealth; // Set the maximum value of the health slider
         healthSlider.value = currentHealth; // Set the initial value of the health slider to current health
+
+        Cursor.lockState = CursorLockMode.Locked; // Lock the cursor to the center of the screen
+        Cursor.visible = false; // Hide the cursor
+
+        gameOverPanel.SetActive(false); // Hide the game over panel at the start
+        respawnButton.onClick.AddListener(RestartGame); // Add listener to respawn button to restart the game
     }
 
 
@@ -186,6 +235,17 @@ public class PlayerBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (gameOverPanel.activeInHierarchy)
+        {
+            Cursor.visible = true; // Show the cursor when the game over panel is active
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
+        {
+            Cursor.visible = false; // Hide the cursor when the game is active
+            Cursor.lockState = CursorLockMode.Locked; // Lock the cursor to the center of the screen
+        }
+
         // Damage player if inside sewage hazard
         if (isInSewage)
         {
