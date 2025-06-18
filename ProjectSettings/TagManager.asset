@@ -11,6 +11,8 @@ TagManager:
   - Axe
   - Collectible
   - Lever
+  - Hazard
+  - Ladder
   layers:
   - Default
   - TransparentFX

@@ -54,6 +54,7 @@ public class PlayerBehaviour : MonoBehaviour
     LeverBehaviour currentLever = null; // Reference to the currently detected lever
     OrbBehaviour currentOrb = null; // Reference to the currently detected coin
     AxeBehaviour axe = null;
+    LadderBehaviour currentLadder = null; // Reference to the ladder escape behaviour
 
     public void ModifyHealth(int amount)
     {
@@ -147,12 +148,23 @@ public class PlayerBehaviour : MonoBehaviour
             {
                 lookingAtBreakable.Break();
             }
-            
+
             else if (currentOrb != null)
             {
                 Debug.Log("Collecting orb");
                 currentOrb.CollectOrb(this);
             }
+            else if (currentLadder != null)
+                {
+                    Debug.Log("Attempting to escape via ladder");
+                    bool escaped = currentLadder.TryEscape(this);
+                    if (!escaped)
+                    {
+                        interactionPrompt.text = "Ladder locked – need 2000+ points to escape.";
+                        interactionPrompt.gameObject.SetActive(true);
+                    }
+                }
+
         }
         else
         {
@@ -300,6 +312,27 @@ public class PlayerBehaviour : MonoBehaviour
                     }
                 }
             }
+            else if (hitObject.CompareTag("Ladder"))
+            {
+                currentLadder = hitObject.GetComponent<LadderBehaviour>();
+                if (currentLadder == null)
+                {
+                    Debug.LogWarning("LadderBehaviour component not found on the ladder object.");
+                }
+                if (currentLadder != null)
+                {
+                    canRaycastInteract = true;
+                    if (currentScore >= currentLadder.requiredScore)
+                    {
+                        interactionPrompt.text = "E to escape via ladder";
+                    }
+                    else
+                    {
+                        interactionPrompt.text = "Ladder locked – need 2000+ points to escape.";
+                    }
+                    interactionPrompt.gameObject.SetActive(true);
+                }
+            }
 
 
         }
@@ -326,6 +359,13 @@ public class PlayerBehaviour : MonoBehaviour
             interactionPrompt.text = "";
             interactionPrompt.gameObject.SetActive(false);
         }
+        if (currentLadder != null && (hitInfo.collider == null || hitInfo.collider.gameObject != currentLadder.gameObject))
+        {
+            currentLadder = null;
+            interactionPrompt.text = "";
+            interactionPrompt.gameObject.SetActive(false);
+        }
+
 
         currentOrb = newOrb;
         previousOrb = newOrb;

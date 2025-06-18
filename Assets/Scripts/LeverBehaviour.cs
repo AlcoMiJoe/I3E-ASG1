@@ -13,6 +13,7 @@ public class LeverBehaviour : MonoBehaviour
     [SerializeField]
     AudioClip leverSound; // Sound to play when the lever is flipped
 
+    [SerializeField]
     GateBehaviour gate; // Reference to the gate this lever controls
 
     Quaternion offRotation;
