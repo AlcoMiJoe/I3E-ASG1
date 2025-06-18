@@ -131,15 +131,23 @@ public class PlayerBehaviour : MonoBehaviour
                 Debug.Log("Interacting with door");
                 currentDoor.OpenDoor();
             }
+
             else if (currentLever != null)
             {
-                Debug.Log("Interacting with lever");
-                currentLever.FlipLever();
+                Debug.Log("Attempting to interact with lever");
+                bool flipped = currentLever.TryFlipLever(this);
+                if (!flipped)
+                {
+                    interactionPrompt.text = "Lever inactive – need at least 1000 points.";
+                    interactionPrompt.gameObject.SetActive(true);
+                }
             }
+
             else if (lookingAtBreakable != null && HasAxe)
             {
                 lookingAtBreakable.Break();
             }
+            
             else if (currentOrb != null)
             {
                 Debug.Log("Collecting orb");
@@ -275,6 +283,25 @@ public class PlayerBehaviour : MonoBehaviour
                     interactionPrompt.gameObject.SetActive(true);
                 }
             }
+            else if (hitObject.CompareTag("Lever"))
+            {
+                currentLever = hitObject.GetComponent<LeverBehaviour>();
+                if (currentLever != null)
+                {
+                    if (currentScore >= currentLever.targetScore)
+                    {
+                        canRaycastInteract = true;
+                        interactionPrompt.text = "E to flip lever";
+                    }
+                    else
+                    {
+                        canRaycastInteract = false; // Player sees the prompt but can't interact
+                        interactionPrompt.text = "Lever locked – need 1000+ points";
+                    }
+                }
+            }
+
+
         }
 
         if (previousOrb != null && previousOrb != newOrb)
@@ -290,6 +317,12 @@ public class PlayerBehaviour : MonoBehaviour
         if (currentDoor != null && (hitInfo.collider == null || hitInfo.collider.gameObject != currentDoor.gameObject))
         {
             currentDoor = null;
+            interactionPrompt.text = "";
+            interactionPrompt.gameObject.SetActive(false);
+        }
+        if (currentLever != null && (hitInfo.collider == null || hitInfo.collider.gameObject != currentLever.gameObject))
+        {
+            currentLever = null;
             interactionPrompt.text = "";
             interactionPrompt.gameObject.SetActive(false);
         }

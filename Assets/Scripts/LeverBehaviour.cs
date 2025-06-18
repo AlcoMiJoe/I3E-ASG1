@@ -1,42 +1,43 @@
 using UnityEngine;
+using System.Collections;
+
+// LeverBehaviour controls a lever that can be flipped by the player
+// The lever requires a certain score to be flipped and controls a gate's state
+// When flipped, it changes its rotation to indicate its state and notifies the gate to open or close
 
 public class LeverBehaviour : MonoBehaviour
 {
-    PlayerBehaviour player;
-    public int targetScore = 1000;
-    public bool IsActive = true;
-    public bool IsFlipped = false;
+    public int targetScore = 1000; // Score needed to activate the lever
+    public bool isOn = false; // Current lever state
 
-    // void Update()
-    // {
-    //     if (player != null && player.currentScore >= targetScore)
-    //     {
-    //         IsActive = true;
-    //     }
-    // }
+    [SerializeField]
+    AudioClip leverSound; // Sound to play when the lever is flipped
 
-    public void FlipLever()
+    GateBehaviour gate; // Reference to the gate this lever controls
+
+    Quaternion offRotation;
+    Quaternion onRotation;
+
+    void Start()
     {
-        if (IsActive)
+        // Store both on and off rotations
+        offRotation = transform.rotation;
+        onRotation = Quaternion.Euler(transform.eulerAngles.x - 120f, transform.eulerAngles.y, transform.eulerAngles.z);
+    }
+
+    // This method attempts to flip the lever if the player meets the score requirement
+    public bool TryFlipLever(PlayerBehaviour player)
+    {
+        if (player.currentScore < targetScore)
         {
-            if (IsFlipped == false)
-            {
-                IsFlipped = true;
-                transform.rotation = Quaternion.Euler(-120f, transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z); // Flip the lever
-                Debug.Log("Lever flipped!");
-                // Add any additional logic for when the lever is flipped, such as triggering an event or changing game state
-            }
-            else
-            {
-                IsFlipped = false;
-                transform.rotation = Quaternion.Euler(0f, transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z); // Reset the lever
-                Debug.Log("Lever reset!");
-                // Add any additional logic for when the lever is reset
-            }
+            return false; // Not enough score to flip lever
         }
-        else
-        {
-            Debug.LogWarning("Lever is not active. Cannot flip.");
-        }
+
+        isOn = !isOn;
+        transform.rotation = isOn ? onRotation : offRotation;
+        gate.ToggleGate(isOn); // Notify the gate to open or close
+        AudioSource.PlayClipAtPoint(leverSound, transform.position); // Play the lever sound
+        Debug.Log("Lever flipped. New state: " + (isOn ? "ON" : "OFF"));
+        return true;
     }
 }
