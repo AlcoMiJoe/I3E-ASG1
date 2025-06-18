@@ -11,7 +11,10 @@ public class PlayerBehaviour : MonoBehaviour
 {
     int maxHealth = 100; // Maximum health of the player
     int currentHealth = 100; // Current health of the player
-    bool canInteract = false; // Flag to check if the player can interact with objects
+
+    bool canTriggerInteract = false; // NEW: Flag to check if player can interact via trigger
+    bool canRaycastInteract = false; // NEW: Flag to check if player can interact via raycast
+
     bool isInSewage = false;
     public int currentScore = 0;
     float sewageTimer = 0f;
@@ -19,7 +22,6 @@ public class PlayerBehaviour : MonoBehaviour
 
     OrbBehaviour previousOrb = null;
     BreakableBehaviour previousBreakable = null;
-
 
     public bool HasAxe = false; // Property to check if the player has an axe
     bool isDead = false; // Property to check if the player is dead
@@ -31,7 +33,7 @@ public class PlayerBehaviour : MonoBehaviour
     float interactionDistance = 5f;
     [SerializeField]
     Transform interactionPoint; // Point from which the player interacts with objects
-    
+
     [SerializeField]
     AudioClip damageSound; // Sound to play when interacting with objects
     [SerializeField]
@@ -47,7 +49,6 @@ public class PlayerBehaviour : MonoBehaviour
     GameObject gameOverPanel; // Panel to display when the player dies
     [SerializeField]
     Button respawnButton; // Button to respawn the player after death
-
 
     DoorBehaviour currentDoor = null;
     LeverBehaviour currentLever = null; // Reference to the currently detected lever
@@ -91,24 +92,10 @@ public class PlayerBehaviour : MonoBehaviour
         scoreText.text = "Score: " + currentScore.ToString(); // Update the score text in the UI
     }
 
-
-
     void OnTriggerEnter(Collider other)
     {
         Debug.Log("Player entered trigger with: " + other.gameObject.name); // Log the object the player collided with
-        if (other.CompareTag("Door"))
-        {
-            canInteract = true; // Allow interaction with the door
-            currentDoor = other.GetComponent<DoorBehaviour>(); // Get the DoorBehaviour component from the door
-        }
-        else if (other.CompareTag("Lever"))
-        {
-            canInteract = true; // Allow interaction with the lever
-            currentLever = other.GetComponent<LeverBehaviour>(); // Get the LeverBehaviour component from the lever
-            interactionPrompt.text = "E to interact with lever"; // Update interaction prompt text
-            interactionPrompt.gameObject.SetActive(true);
-        }
-        else if (other.CompareTag("SewageHazard"))
+        if (other.CompareTag("SewageHazard"))
         {
             isInSewage = true; // Player is in sewage hazard
             Debug.Log("Player entered sewage hazard");
@@ -128,28 +115,26 @@ public class PlayerBehaviour : MonoBehaviour
         }
         else if (other.CompareTag("Collectible"))
         {
-            // Set the canInteract flag to true
-            // Get the CoinBehaviour component from the detected object
-            canInteract = true;
+            canTriggerInteract = true; // NEW: Trigger-based collectible interaction
             currentOrb = other.GetComponent<OrbBehaviour>();
-            currentOrb.HighlightOrb(); // Highlight the coin to indicate it can be collected
+            currentOrb.HighlightOrb();
         }
     }
 
     void OnInteract()
     {
         Debug.Log("Player interaction initiated"); // Log interaction initiation
-        if (canInteract)
+        if (canTriggerInteract || canRaycastInteract) // NEW: Use combined flag
         {
             if (currentDoor != null)
             {
-                Debug.Log("Interacting with door"); // Log interaction
-                currentDoor.OpenDoor(); // Call the OpenDoor method on the door
+                Debug.Log("Interacting with door");
+                currentDoor.OpenDoor();
             }
             else if (currentLever != null)
             {
-                Debug.Log("Interacting with lever"); // Log interaction
-                currentLever.FlipLever(); // Call the FlipLever method on the lever
+                Debug.Log("Interacting with lever");
+                currentLever.FlipLever();
             }
             else if (lookingAtBreakable != null && HasAxe)
             {
@@ -159,94 +144,62 @@ public class PlayerBehaviour : MonoBehaviour
             {
                 Debug.Log("Collecting orb");
                 currentOrb.CollectOrb(this);
-            }            
+            }
         }
-
+        else
+        {
+            Debug.Log("Cannot interact with the current object");
+        }
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Door"))   // Check if the player exited a door trigger
-        {
-            Debug.Log("Player exited door trigger");
-            canInteract = false; // Disable interaction with the door
-            currentDoor = null; // Reset currentDoor to null when exiting the door trigger
-            interactionPrompt.text = ""; // Clear interaction prompt text
-            interactionPrompt.gameObject.SetActive(false); // Hide the interaction prompt when exiting the door trigger
-        }
-        else if (other.CompareTag("Lever")) // Check if the player exited a lever trigger
-        {
-            Debug.Log("Player exited lever trigger");
-            canInteract = false; // Disable interaction with the lever
-            currentLever = null; // Reset currentLever to null when exiting the lever trigger
-            interactionPrompt.text = ""; // Clear interaction prompt text
-            interactionPrompt.gameObject.SetActive(false); // Hide the interaction prompt when exiting the lever trigger
-        }
-        else if (other.CompareTag("SewageHazard"))  // Check if the player exited a sewage hazard trigger
+        if (other.CompareTag("SewageHazard"))
         {
             Debug.Log("Player exited sewage hazard");
-            isInSewage = false; // Player is no longer in sewage hazard
-                                // Reset sewage timer when exiting sewage hazard
+            isInSewage = false;
             sewageTimer = 0f;
-        }
-        else if (currentOrb != null)
-        {
-            // If the object that exited the trigger is the same as the current coin
-            if (other.gameObject == currentOrb.gameObject)
-            {
-                // Set the canInteract flag to false
-                // Set the current coin to null
-                // This prevents the player from interacting with the coin
-                canInteract = false;
-                currentOrb.UnhighlightOrb(); // Unhighlight the coin to indicate it can no longer be collected
-                currentOrb = null;
-            }
         }
     }
 
     public void RestartGame()
     {
-        Debug.Log("Restarting game..."); // Log the game restart action
-        Time.timeScale = 1f; // Resume the game time
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Reload the current scene to restart the game
+        Debug.Log("Restarting game...");
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     void Start()
     {
-        // Initialize player health and score
-        currentHealth = maxHealth; // Set current health to maximum health
-        currentScore = 0; // Initialize score to zero
+        currentHealth = maxHealth;
+        currentScore = 0;
         Debug.Log("Player started with health: " + currentHealth + " and score: " + currentScore);
 
-        scoreText.text = "Score: " + currentScore.ToString(); // Update the score text in the UI
+        scoreText.text = "Score: " + currentScore.ToString();
 
-        healthSlider.maxValue = maxHealth; // Set the maximum value of the health slider
-        healthSlider.value = currentHealth; // Set the initial value of the health slider to current health
+        healthSlider.maxValue = maxHealth;
+        healthSlider.value = currentHealth;
 
-        Cursor.lockState = CursorLockMode.Locked; // Lock the cursor to the center of the screen
-        Cursor.visible = false; // Hide the cursor
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-        gameOverPanel.SetActive(false); // Hide the game over panel at the start
-        respawnButton.onClick.AddListener(RestartGame); // Add listener to respawn button to restart the game
+        gameOverPanel.SetActive(false);
+        respawnButton.onClick.AddListener(RestartGame);
     }
 
-
-
-    // Update is called once per frame
     void Update()
     {
         if (gameOverPanel.activeInHierarchy)
         {
-            Cursor.visible = true; // Show the cursor when the game over panel is active
+            Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
         else
         {
-            Cursor.visible = false; // Hide the cursor when the game is active
-            Cursor.lockState = CursorLockMode.Locked; // Lock the cursor to the center of the screen
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
         }
 
-        // Damage player if inside sewage hazard
         if (isInSewage)
         {
             sewageTimer += Time.deltaTime;
@@ -262,8 +215,8 @@ public class PlayerBehaviour : MonoBehaviour
         RaycastHit hitInfo;
         Debug.DrawRay(interactionPoint.position, interactionPoint.forward * interactionDistance, Color.magenta);
 
-        // Reset current detection
-        canInteract = false;
+        // Reset raycast interaction detection
+        canRaycastInteract = false; // NEW: Only reset raycast, not trigger interaction
 
         OrbBehaviour newOrb = null;
         BreakableBehaviour newBreakable = null;
@@ -279,12 +232,11 @@ public class PlayerBehaviour : MonoBehaviour
                 {
                     if (previousOrb != null && previousOrb != newOrb)
                         previousOrb.UnhighlightOrb();
-                        interactionPrompt.text = ""; // Clear interaction prompt text
+                    interactionPrompt.text = "";
 
                     newOrb.HighlightOrb();
-                    canInteract = true;
-                    interactionPrompt.text = "E to collect"; // Update interaction prompt text
-
+                    canRaycastInteract = true; // NEW
+                    interactionPrompt.text = "E to collect";
                 }
             }
             else if (hitObject.CompareTag("AxeBreak"))
@@ -295,43 +247,57 @@ public class PlayerBehaviour : MonoBehaviour
                     if (previousBreakable != null && previousBreakable != newBreakable)
                     {
                         previousBreakable.Unhighlight();
-                        interactionPrompt.text = ""; // Clear interaction prompt text
+                        interactionPrompt.text = "";
                     }
 
                     newBreakable.Highlight();
-                    canInteract = HasAxe;
+                    canRaycastInteract = HasAxe; // NEW
 
                     if (HasAxe)
                     {
-                        interactionPrompt.text = "E to break"; // Update interaction prompt text
+                        interactionPrompt.text = "E to break";
                     }
                     else
                     {
-                        interactionPrompt.text = "Player: Looks like I need something to break this"; // Update interaction prompt text
+                        interactionPrompt.text = "Player: Looks like I need something to break this";
                     }
-                    interactionPrompt.gameObject.SetActive(true); // Ensure the interaction prompt is visible
+
+                    interactionPrompt.gameObject.SetActive(true);
+                }
+            }
+            else if (hitObject.CompareTag("Door"))
+            {
+                currentDoor = hitObject.GetComponent<DoorBehaviour>();
+                if (currentDoor != null)
+                {
+                    canRaycastInteract = true; // NEW
+                    interactionPrompt.text = "E to interact with door";
+                    interactionPrompt.gameObject.SetActive(true);
                 }
             }
         }
 
-        // If previously highlighted orb is no longer looked at
         if (previousOrb != null && previousOrb != newOrb)
         {
             previousOrb.UnhighlightOrb();
-            interactionPrompt.text = ""; // Clear interaction prompt text
+            interactionPrompt.text = "";
         }
         if (previousBreakable != null && previousBreakable != newBreakable)
         {
             previousBreakable.Unhighlight();
-            interactionPrompt.text = ""; // Clear interaction prompt text
+            interactionPrompt.text = "";
+        }
+        if (currentDoor != null && (hitInfo.collider == null || hitInfo.collider.gameObject != currentDoor.gameObject))
+        {
+            currentDoor = null;
+            interactionPrompt.text = "";
+            interactionPrompt.gameObject.SetActive(false);
         }
 
-        // Update references
         currentOrb = newOrb;
         previousOrb = newOrb;
 
         lookingAtBreakable = newBreakable;
         previousBreakable = newBreakable;
-
     }
 }
