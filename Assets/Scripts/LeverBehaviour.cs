@@ -1,3 +1,10 @@
+/*
+* Author: Alecxander Dela Paz
+* Date: 2025-06-18
+* Description: Controls a lever that can be flipped by the player.
+*/
+
+
 using UnityEngine;
 using System.Collections;
 
@@ -16,8 +23,12 @@ public class LeverBehaviour : MonoBehaviour
     [SerializeField]
     GateBehaviour gate; // Reference to the gate this lever controls
 
-    Quaternion offRotation;
-    Quaternion onRotation;
+    Quaternion offRotation; // Rotation when the lever is off
+    // This is the default rotation of the lever when it is not activated
+    // It is set in Start() to the current rotation of the lever
+    Quaternion onRotation;  // Rotation when the lever is on
+    // This is the rotation of the lever when it is activated
+    // It is set in Start() to a specific rotation offset from the current rotation
 
     void Start()
     {

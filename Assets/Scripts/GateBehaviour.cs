@@ -1,3 +1,9 @@
+/*
+* Author: Alecxander Dela Paz
+* Date: 2025-06-18
+* Description: Controls a gate that can be opened or closed by a lever.
+*/
+
 using UnityEngine;
 
 public class GateBehaviour : MonoBehaviour
@@ -13,7 +19,11 @@ public class GateBehaviour : MonoBehaviour
     [SerializeField]
     AudioClip gateSound; // Sound to play when the gate is opened or closed
 
-
+    /// <summary>
+    /// Initializes the gate's positions and sets the closed position.
+    /// The open position is calculated based on the closed position.
+    /// The gate starts in the closed position.
+    /// </summary>
     void Start()
     {
         // Store the initial position as the closed position
@@ -22,6 +32,12 @@ public class GateBehaviour : MonoBehaviour
         openPosition = closedPosition + Vector3.up * 4f; // Adjust Y value for gate height
     }
 
+
+    /// <summary>    /// Toggles the gate state between open and closed.
+    /// Plays a sound effect when the gate is toggled.
+    /// If a movement coroutine is already running, it stops it before starting a new one.
+    /// </summary>
+    /// <param name="open">True to open the gate, false to close it.</param>
     public void ToggleGate(bool open)
     {
         Debug.Log("Toggling gate. Open: " + open);
@@ -39,7 +55,13 @@ public class GateBehaviour : MonoBehaviour
         Vector3 targetPosition = isOpen ? openPosition : closedPosition;
         moveCoroutine = StartCoroutine(MoveGate(targetPosition));
     }
-    
+
+
+    /// <summary>
+    /// Moves the gate to the target position over time.
+    /// Uses Vector3.MoveTowards to smoothly transition the gate's position.
+    /// </summary>
+    /// <param name="targetPosition">The position to move the gate towards.</param>
     private System.Collections.IEnumerator MoveGate(Vector3 targetPosition)
     {
         while (Vector3.Distance(transform.position, targetPosition) > 0.01f)

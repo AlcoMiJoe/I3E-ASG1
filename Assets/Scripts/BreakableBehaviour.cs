@@ -1,3 +1,10 @@
+/*
+* Author: Alecxander Dela Paz
+* Date: 2025-06-17
+* Description: Handles the behavior of breakable objects in the game.
+*/
+
+
 using UnityEngine;
 using System;
 using TMPro; // Importing TextMeshPro for UI text handling

@@ -1,3 +1,10 @@
+/*
+* Author: Alecxander Dela Paz
+* Date: 2025-06-15
+* Description: Handles axe interactions, including collection by the player.
+*/
+
+
 using UnityEngine;
 
 public class AxeBehaviour : MonoBehaviour

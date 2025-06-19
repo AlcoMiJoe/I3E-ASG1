@@ -1,3 +1,10 @@
+/*
+* Author: Alecxander Dela Paz
+* Date: 2025-06-14
+* Description: Handles player actions, health, score, and interactions with the game world.
+*/
+
+
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -18,10 +25,8 @@ public class PlayerBehaviour : MonoBehaviour
     bool isInSewage = false;
     public int currentScore = 0;
     float sewageTimer = 0f;
-    BreakableBehaviour lookingAtBreakable = null;
+    private bool hasMoved = false;
 
-    OrbBehaviour previousOrb = null;
-    BreakableBehaviour previousBreakable = null;
 
     public bool HasAxe = false; // Property to check if the player has an axe
     bool isDead = false; // Property to check if the player is dead
@@ -54,7 +59,17 @@ public class PlayerBehaviour : MonoBehaviour
     LeverBehaviour currentLever = null; // Reference to the currently detected lever
     OrbBehaviour currentOrb = null; // Reference to the currently detected coin
     AxeBehaviour axe = null;
+    BreakableBehaviour lookingAtBreakable = null;
+    OrbBehaviour previousOrb = null;
+    BreakableBehaviour previousBreakable = null;
+
+
+    [SerializeField]
+    private LadderBehaviour ladder; // Reference to ladder to check escape panel state
+
     LadderBehaviour currentLadder = null; // Reference to the ladder escape behaviour
+
+
 
     public void ModifyHealth(int amount)
     {
@@ -191,39 +206,61 @@ public class PlayerBehaviour : MonoBehaviour
 
     void Start()
     {
-        currentHealth = maxHealth;
-        currentScore = 0;
+        currentHealth = maxHealth; // Initialize player's health to maximum
+        currentScore = 0; // Initialize player's score to zero
         Debug.Log("Player started with health: " + currentHealth + " and score: " + currentScore);
 
-        scoreText.text = "Score: " + currentScore.ToString();
+        scoreText.text = "Score: " + currentScore.ToString(); // Initialize the score text in the UI
 
-        healthSlider.maxValue = maxHealth;
-        healthSlider.value = currentHealth;
+        healthSlider.maxValue = maxHealth; // Set the maximum value of the health slider
+        healthSlider.value = currentHealth; // Set the initial value of the health slider
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         gameOverPanel.SetActive(false);
         respawnButton.onClick.AddListener(RestartGame);
+
+        interactionPrompt.text = "WASD to move"; // Initial interaction prompt
+        interactionPrompt.gameObject.SetActive(true); // Show the interaction prompt at the start
     }
 
     void Update()
     {
-        if (gameOverPanel.activeInHierarchy)
+        if (!hasMoved)
         {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
+            float moveInputX = Input.GetAxisRaw("Horizontal");
+            float moveInputZ = Input.GetAxisRaw("Vertical");
+
+            if (moveInputX != 0 || moveInputZ != 0)
+            {
+                hasMoved = true;
+                interactionPrompt.text = "";
+                interactionPrompt.gameObject.SetActive(false); // Hide the interaction prompt after first movement
+            }
+        }
+
+        // Manage cursor visibility and lock state based on game over or escape panel
+        if (gameOverPanel.activeInHierarchy || (ladder != null && ladder.escapePanel.activeInHierarchy))
+        {
+            Cursor.visible = true; // Show cursor when game over or escape panel is active
+            Cursor.lockState = CursorLockMode.None; // Unlock cursor
         }
         else
         {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false; // Hide cursor during gameplay
+            Cursor.lockState = CursorLockMode.Locked; // Lock cursor to center
         }
 
+        // Apply sewage damage over time if player is in sewage
         if (isInSewage)
         {
             sewageTimer += Time.deltaTime;
 
+            if (sewageTimer == 0f)
+            {
+                ModifyHealth(-sewageDamagePerSecond); // Initial damage when entering sewage
+            }
             if (sewageTimer >= 1f)
             {
                 ModifyHealth(-sewageDamagePerSecond);
